@@ -28,7 +28,7 @@ function App() {
   // GET products
   async function fetchProducts() {
     try {
-      const productRes = await axios.get("http://localhost:5050/products");
+    const productRes = await axios.get('https://mvc-production-b35d.up.railway.app/api/products');
       setProducts(productRes.data);
       console.log("Products:", productRes.data);
     } catch (err) {
@@ -46,7 +46,7 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:5050/products", {
+      const response = await axios.post("https://mvc-production-b35d.up.railway.app/products", {
         id:productId,
         name: newProductInfo.name,
         price: newProductInfo.price,
@@ -72,7 +72,7 @@ function App() {
 
     try {
       const response = await axios.put(
-        `http://localhost:5050/products/${newProductInfo.id}`,
+        `https://mvc-production-b35d.up.railway.app/products/${newProductInfo.id}`,
         {
           name: newProductInfo.name,
           price: newProductInfo.price,
@@ -96,7 +96,7 @@ function App() {
   async function deleteProduct(productId) {
     try {
       const response = await axios.delete(
-        `http://localhost:5050/products/${productId}`
+        `https://mvc-production-b35d.up.railway.app/products/${productId}`
       );
       console.log("Product deleted:", response.data);
       fetchProducts();
