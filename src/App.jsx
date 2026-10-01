@@ -28,7 +28,7 @@ function App() {
   // GET products
   async function fetchProducts() {
     try {
-    const productRes = await axios.get('https://mvc-production-b35d.up.railway.app/api/products');
+    const productRes = await axios.get('https://mvc-production-b35d.up.railway.app/products');
       setProducts(productRes.data);
       console.log("Products:", productRes.data);
     } catch (err) {
