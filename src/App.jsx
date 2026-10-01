@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import axios from "axios";
+
 
 const API_URL = "https://mvc-production-b35d.up.railway.app";
 
@@ -16,7 +16,7 @@ function App() {
     !!localStorage.getItem("token")
   );
 
-  // =============== PRODUCT STATE =================
+  // ================= PRODUCT STATE =================
 
   const [newProductInfo, setNewProductInfo] = useState({
     id: "",
@@ -44,16 +44,17 @@ function App() {
         }
       );
 
-      alert(response.data.message);
+      alert(response.data.message || "Signup successful!");
 
       // Clear form
       setUsername("");
       setPassword("");
 
-      // Signup ke baad Login page show hoga
+      // Login page show
       setAuthMode("login");
     } catch (error) {
       console.log("Signup Error:", error);
+
       console.log(
         "Server Response:",
         error.response?.data
@@ -80,7 +81,7 @@ function App() {
         }
       );
 
-      // JWT token localStorage mein save
+      // Save JWT token
       localStorage.setItem(
         "token",
         response.data.token
@@ -96,6 +97,7 @@ function App() {
       alert("Login successful!");
     } catch (error) {
       console.log("Login Error:", error);
+
       console.log(
         "Server Response:",
         error.response?.data
@@ -115,6 +117,10 @@ function App() {
 
     setIsLoggedIn(false);
 
+    // Clear products
+    setProducts([]);
+
+    // Clear product form
     setNewProductInfo({
       id: "",
       name: "",
@@ -143,8 +149,20 @@ function App() {
 
   async function fetchProducts() {
     try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setProducts([]);
+        return;
+      }
+
       const response = await axios.get(
-        `${API_URL}/products`
+        `${API_URL}/products`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setProducts(response.data);
@@ -158,12 +176,23 @@ function App() {
         "Error fetching products:",
         error
       );
+
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        logoutUser();
+      }
     }
   }
 
+  // ================= FETCH AFTER LOGIN =================
+
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (isLoggedIn) {
+      fetchProducts();
+    } else {
+      setProducts([]);
+    }
+  }, [isLoggedIn]);
 
   // ================= ADD PRODUCT =================
 
@@ -221,7 +250,10 @@ function App() {
       );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again.");
+        alert(
+          "Session expired. Please login again."
+        );
+
         logoutUser();
       } else {
         alert(
@@ -287,7 +319,10 @@ function App() {
       );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again.");
+        alert(
+          "Session expired. Please login again."
+        );
+
         logoutUser();
       } else {
         alert(
@@ -334,7 +369,10 @@ function App() {
       );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again.");
+        alert(
+          "Session expired. Please login again."
+        );
+
         logoutUser();
       } else {
         alert(
@@ -387,7 +425,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 py-10">
 
-      {/* ================= AUTH PAGE ================= */}
+      {/* =================================================
+          LOGIN / SIGNUP PAGE
+      ================================================= */}
 
       {!isLoggedIn ? (
         <div className="w-full max-w-md mx-auto">
@@ -400,6 +440,7 @@ function App() {
             }
             className="p-6 bg-white shadow-md rounded-lg"
           >
+
             <h2 className="text-2xl font-bold mb-5 text-center">
               {authMode === "login"
                 ? "Login"
@@ -443,7 +484,7 @@ function App() {
                 : "Signup"}
             </button>
 
-            {/* Switch */}
+            {/* Switch Login / Signup */}
 
             <div className="text-center mt-4">
 
@@ -478,26 +519,31 @@ function App() {
               )}
 
             </div>
+
           </form>
         </div>
       ) : (
 
-        /* ================= PRODUCT PAGE ================= */
+        /* =================================================
+           PRODUCT PAGE
+        ================================================= */
 
         <div className="w-full">
 
           {/* Logout */}
 
           <div className="w-full max-w-md mx-auto mb-5">
+
             <button
               onClick={logoutUser}
               className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600"
             >
               Logout
             </button>
+
           </div>
 
-          {/* Add / Update Form */}
+          {/* Add / Update Product Form */}
 
           <form
             onSubmit={
@@ -596,96 +642,101 @@ function App() {
             )}
 
           </form>
+
+          {/* =================================================
+              PRODUCTS LIST
+          ================================================= */}
+
+          <div className="w-full max-w-md mx-auto mt-8 bg-white shadow-md rounded-lg p-6">
+
+            <h2 className="text-xl font-bold mb-4">
+              Products
+            </h2>
+
+            {products.length === 0 ? (
+              <p className="text-gray-500">
+                No products found.
+              </p>
+            ) : (
+              <ul className="space-y-4">
+
+                {products.map((product) => (
+                  <li
+                    key={product.id}
+                    className="flex items-center justify-between border border-gray-200 rounded-md p-3"
+                  >
+
+                    {/* Product Info */}
+
+                    <div className="flex items-center gap-3">
+
+                      {product.imageUrl && (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-14 h-14 object-cover rounded-md"
+                        />
+                      )}
+
+                      <div>
+
+                        <p className="font-semibold">
+                          {product.name}
+                        </p>
+
+                        <p className="text-gray-500 text-sm">
+                          Rs. {product.price}
+                        </p>
+
+                        {product.desc && (
+                          <p className="text-gray-400 text-xs">
+                            {product.desc}
+                          </p>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                    {/* Edit / Delete */}
+
+                    <div className="flex gap-2">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          loadProductForEdit(product)
+                        }
+                        className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          deleteProduct(product.id)
+                        }
+                        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+
+                    </div>
+
+                  </li>
+                ))}
+
+              </ul>
+            )}
+
+          </div>
+
         </div>
       )}
-
-      {/* ================= PRODUCTS ================= */}
-
-      <div className="w-full max-w-md mx-auto mt-8 bg-white shadow-md rounded-lg p-6">
-
-        <h2 className="text-xl font-bold mb-4">
-          Products
-        </h2>
-
-        {products.length === 0 ? (
-          <p className="text-gray-500">
-            No products found.
-          </p>
-        ) : (
-          <ul className="space-y-4">
-
-            {products.map((product) => (
-              <li
-                key={product.id}
-                className="flex items-center justify-between border border-gray-200 rounded-md p-3"
-              >
-
-                {/* Product Info */}
-
-                <div className="flex items-center gap-3">
-
-                  {product.imageUrl && (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-14 h-14 object-cover rounded-md"
-                    />
-                  )}
-
-                  <div>
-
-                    <p className="font-semibold">
-                      {product.name}
-                    </p>
-
-                    <p className="text-gray-500 text-sm">
-                      Rs. {product.price}
-                    </p>
-
-                    {product.desc && (
-                      <p className="text-gray-400 text-xs">
-                        {product.desc}
-                      </p>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Buttons */}
-
-                <div className="flex gap-2">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      loadProductForEdit(product)
-                    }
-                    className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      deleteProduct(product.id)
-                    }
-                    className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-
-                </div>
-              </li>
-            ))}
-
-          </ul>
-        )}
-      </div>
 
     </div>
   );
 }
 
 export default App;
-
